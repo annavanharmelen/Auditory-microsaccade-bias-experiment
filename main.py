@@ -61,7 +61,9 @@ def main():
             "trials_completed": str,
         },
     )
-    new_participants, current_block_type = get_participant_details(old_participants, testing)
+    new_participants, current_block_type = get_participant_details(
+        old_participants, testing
+    )
 
     # Initialise set-up
     settings = get_settings(monitor, directory)
@@ -86,7 +88,7 @@ def main():
     stimuli = initialise_all_stimuli(settings)
 
     # Practice until participant wants to stop
-    practice(current_block_type, stimuli, None if testing else eyelinker, settings)
+    # practice(current_block_type, stimuli, None if testing else eyelinker, settings)
 
     # Initialise some stuff
     start_of_experiment = time()
@@ -98,7 +100,7 @@ def main():
     try:
         for block_nr in range(2 if testing else N_BLOCKS):
             # Pseudo-randomly create conditions and target locations (so they're weighted)
-            trials = create_trial_list(16 if testing else TRIALS_PER_BLOCK)
+            trials = create_trial_list(4 if testing else TRIALS_PER_BLOCK)
 
             # Clear keyboard cache before starting again
             settings["keyboard"].clearEvents()
@@ -112,7 +114,7 @@ def main():
                 start_time = time()
 
                 trial_characteristics: dict = generate_trial_characteristics(
-                    trial, settings
+                    trial, current_block_type, settings
                 )
 
                 # Generate trial
@@ -131,7 +133,7 @@ def main():
                     {
                         "trial_number": current_trial,
                         "block": block_nr + 1,
-                        "block_type": "headphones",  # we only do headphones blocks
+                        "block_type": current_block_type,
                         "start_time": str(
                             dt.timedelta(seconds=(start_time - start_of_experiment))
                         ),

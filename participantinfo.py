@@ -17,33 +17,33 @@ def get_participant_details(existing_participants: pd.DataFrame, testing):
     pp_id_list = existing_participants.participant_number.tolist()
 
     if len(pp_id_list) == 1 or pp_id_list[-1] == pp_id_list[-2]:
-            # This must be this participant's first session
-            current_session = 1
+        # This must be this participant's first session
+        current_session = 1
 
-            # Generate random & unique participant number
+        # Generate random & unique participant number
+        participant = random.randint(10, 99)
+        while participant in existing_participants.participant_number.tolist():
             participant = random.randint(10, 99)
-            while participant in existing_participants.participant_number.tolist():
-                participant = random.randint(10, 99)
 
-            # Get participant age if not a trial-run
-            if not testing:
-                age = int(input("Participant age: "))
-            else:
-                age = 00
+        # Get participant age if not a trial-run
+        if not testing:
+            age = int(input("Participant age: "))
+        else:
+            age = 00
 
-            # Determine starting block type
+        # Determine starting block type
 
-            previous_start_block_type = existing_participants.start_block_type.tolist()[-1]
-            if previous_start_block_type == "0":
-                start_block_type = BLOCK_OPTIONS[0]
-            else:
-                idx = (BLOCK_OPTIONS.index(previous_start_block_type) + 1) % len(
-                    BLOCK_OPTIONS
-                )
-                start_block_type = BLOCK_OPTIONS[idx]
+        previous_start_block_type = existing_participants.start_block_type.tolist()[-1]
+        if previous_start_block_type == "0":
+            start_block_type = BLOCK_OPTIONS[0]
+        else:
+            idx = (BLOCK_OPTIONS.index(previous_start_block_type) + 1) % len(
+                BLOCK_OPTIONS
+            )
+            start_block_type = BLOCK_OPTIONS[idx]
 
-            # Insert session number
-            session = max(existing_participants.session_number) + 1
+        # Insert session number
+        session = max(existing_participants.session_number) + 1
 
     else:
         current_session = 2

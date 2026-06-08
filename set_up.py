@@ -61,25 +61,22 @@ def get_settings(monitor: dict, directory):
     frequencies = [300, 316, 332, 350, 368, 387, 408, 429, 451, 475, 500]
 
     # Determine colour range
+    hues = [105, 90, 75, 60, 45, 30, 15, 0, 345, 330, 315]
     colours = [
         [
             hue,  # Hue
             0.2,  # Saturation
             0.5,  # Value
         ]
-        for hue in [105, 90, 75, 60, 45, 30, 15, 0, 345, 330, 315]
+        for hue in hues
     ]
-
-    stimuli_colours = (
-        colours[:5] + colours[6:]
-    )  # not all 11 colours can be used for stimuli
 
     return dict(
         window=window,
         deg2pix=lambda deg: round(deg / degrees_per_pixel),
         frequencies=frequencies,
+        hues=hues,
         colours=colours,
-        stimuli_colours=stimuli_colours,
         keyboard=Keyboard(),
         mouse=visual.CustomMouse(win=window, visible=False),
         monitor=monitor,

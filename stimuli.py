@@ -138,7 +138,7 @@ def draw_fixation_dot(fixation_dot, colour="#eaeaea"):
     fixation_dot.draw()
 
 
-def draw_visual_object(visual_object, colour, position, settings):
+def draw_visual_object(visual_object, hue, position, settings):
     if position == "left":
         pos = (-settings["deg2pix"](ECCENTRICITY), 0)
     elif position == "right":
@@ -146,19 +146,24 @@ def draw_visual_object(visual_object, colour, position, settings):
     else:
         pos = (0, 0)
 
-    visual_object.fillColor = colour
+    visual_object.fillColor = settings["colours"][settings["hues"].index(hue)]
     visual_object.pos = pos
     visual_object.draw()
 
 
-def create_stimulus_frame(visual_object, colour, position, fixation_dot, settings):
+def create_visual_stimulus_frame(visual_object, hue, position, fixation_dot, settings):
     draw_fixation_dot(fixation_dot)
-    draw_visual_object(visual_object, colour, position, settings)
+    draw_visual_object(visual_object, hue, position, settings)
 
 
 def create_cue_frame(target_item, fixation_dot, settings):
     draw_fixation_dot(fixation_dot)
-    show_text(target_item, settings["window"], pos=(0, settings["deg2pix"](0.3)))
+    show_text(
+        target_item,
+        settings["window"],
+        pos=(0, settings["deg2pix"](0)),
+        colour="#000000",
+    )
 
 
 def create_feedback_frame(main_feedback, fixation_dot, settings):

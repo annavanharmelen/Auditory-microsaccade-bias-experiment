@@ -12,25 +12,19 @@ from response import wait_for_key
 
 
 def create_trial_list(n_trials):
-    if n_trials % 16 != 0:
+    if n_trials % 4 != 0:
         raise Exception(
-            "Expected number of trials to be divisible by 16, otherwise perfect factorial combinations are not possible."
+            "Expected number of trials to be divisible by 4, otherwise perfect factorial combinations are not possible."
         )
 
-    # Determine pitches counterweighted with locations
-    target_pitch = n_trials // 2 * ["low"] + n_trials // 2 * ["high"]
-
-    # Determine colours counterweighted with pitches
-    target_colour = n_trials // 2 * ["low"] + n_trials // 2 * ["high"]
-
     # Generate equal distribution of stimulus locations
-    target_position = 2 * (n_trials // 4 * ["left"] + n_trials // 4 * ["right"])
+    target_position = 2 * (n_trials // 2 * ["left"] + n_trials // 2 * ["right"])
 
     # Generate equal distribution of target items
     target_item = n_trials // 2 * [1, 2]
 
     # Create trial parameters for all trials
-    trials = list(zip(target_pitch, target_colour, target_position, target_item))
+    trials = list(zip(target_position, target_item))
     random.shuffle(trials)
 
     return trials

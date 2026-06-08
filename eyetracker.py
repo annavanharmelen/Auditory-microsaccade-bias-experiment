@@ -30,7 +30,9 @@ class Eyelinker:
         self.directory = directory
         self.window = window
         self.tracker = eyelinker.EyeLinker(
-            window=window, eye="RIGHT", filename=f"{session}_{participant}_{block_type_id}.edf"
+            window=window,
+            eye="RIGHT",
+            filename=f"{session}_{participant}_{block_type_id}.edf",
         )
         self.tracker.init_tracker()
 
@@ -48,14 +50,11 @@ class Eyelinker:
         self.tracker.close_edf()
 
 
-def get_trigger(frame, target_pitch, target_colour, target_item, target_position):
+def get_trigger(frame, target_item, task_type, target_position):
     condition_marker = int(target_item)
 
-    if target_pitch == "high":
+    if task_type == "visual":
         condition_marker += 4
-
-    if target_colour == "high":
-        condition_marker += 8
 
     if target_position == "right":
         condition_marker += 2

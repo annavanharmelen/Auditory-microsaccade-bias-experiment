@@ -27,10 +27,10 @@ def evaluate_auditory_response(target_frequency, response_frequency, freqs):
     }
 
 
-def evaluate_visual_response(target_colour, response_colour, colours):
-    colour_diff = response_colour[0] - target_colour[0]
+def evaluate_visual_response(target_hue, response_hue, hues):
+    colour_diff = response_hue - target_hue
     colour_diff_abs = abs(colour_diff)
-    performance = colours.index(response_colour) - colours.index(target_colour)
+    performance = hues.index(response_hue) - hues.index(target_hue)
     sign = "+" if performance > 0 else ""
     return {
         "colour_offset": round(colour_diff),
@@ -55,10 +55,9 @@ def move_marker(marker, current_colour, colours, settings):
 
 def get_auditory_response(
     target_pitch,
-    target_pitch_cat,
     target_item,
     target_position,
-    target_colour_cat,
+    block_type,
     stimuli,
     settings,
     testing,
@@ -95,7 +94,7 @@ def get_auditory_response(
 
     if not testing and eyetracker:
         trigger = get_trigger(
-            "response_onset", target_pitch_cat, target_colour_cat, target_item, target_position
+            "response_onset", target_item, block_type, target_position
         )
         eyetracker.tracker.send_message(f"trig{trigger}")
 
@@ -136,7 +135,7 @@ def get_auditory_response(
 
     if not testing and eyetracker:
         trigger = get_trigger(
-            "response_offset", target_pitch_cat, target_colour_cat, target_item, target_position
+            "response_offset", target_item, block_type, target_position
         )
         eyetracker.tracker.send_message(f"trig{trigger}")
 
@@ -159,11 +158,10 @@ def get_auditory_response(
 
 
 def get_visual_response(
-    target_colour,
-    target_colour_cat,
-    target_pitch_cat,
+    target_hue,
     target_item,
     target_position,
+    block_type,
     stimuli,
     settings,
     testing,
@@ -202,7 +200,7 @@ def get_visual_response(
 
     if not testing and eyetracker:
         trigger = get_trigger(
-            "response_onset", target_pitch_cat, target_colour_cat, target_item, target_position
+            "response_onset", target_item, block_type, target_position
         )
         eyetracker.tracker.send_message(f"trig{trigger}")
 
@@ -213,6 +211,7 @@ def get_visual_response(
             responded = True
             response_colour = colours[idx]
             response_idx = idx
+            response_hue = response_colour[0]
 
         elif "q" in keys:
             raise KeyboardInterrupt()
@@ -242,7 +241,7 @@ def get_visual_response(
 
     if not testing and eyetracker:
         trigger = get_trigger(
-            "response_offset", target_pitch_cat, target_colour_cat, target_item, target_position
+            "response_offset", target_item, block_type, target_position
         )
         eyetracker.tracker.send_message(f"trig{trigger}")
 
@@ -254,13 +253,14 @@ def get_visual_response(
         "response_time_in_ms": round(response_time * 1000, 2),
         "first_key_pressed": first_keys[0].name,
         "response_colour": response_colour,
+        "response_hue": response_hue,
         "response_idx": response_idx,
         "premature_pressed": True if prematurely_pressed else False,
         "premature_key": prematurely_pressed[0][0] if prematurely_pressed else None,
         "premature_timing": (
             round(prematurely_pressed[0][1] * 1000, 2) if prematurely_pressed else None
         ),
-        **evaluate_visual_response(target_colour, response_colour, colours),
+        **evaluate_visual_response(target_hue, response_hue, settings["hues"]),
     }
 
 

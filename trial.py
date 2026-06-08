@@ -14,7 +14,7 @@ from response import get_auditory_response, get_visual_response, check_quit
 from stimuli import (
     show_text,
     draw_fixation_dot,
-    create_stimulus_frame,
+    create_visual_stimulus_frame,
     create_cue_frame,
     create_feedback_frame,
 )
@@ -22,83 +22,63 @@ from eyetracker import get_trigger
 import random
 
 
-def generate_trial_characteristics(conditions, settings):
+def generate_trial_characteristics(conditions, task_type, settings):
     # Extract condition information
-    target_pitch_cat, target_colour_cat, target_position, target_item = conditions
+    target_position, target_item = conditions
 
-    pitch_dict = {
-        "low": random.choice(settings["frequencies"][:5]),
-        "high": random.choice(settings["frequencies"][6:]),
-    }
-
-    target_pitch = pitch_dict[target_pitch_cat]
-
-    distractor_pitch_cat = {"high": "low", "low": "high"}[target_pitch_cat]
     distractor_position = {"left": "right", "right": "left"}[target_position]
     distractor_item = {1: 2, 2: 1}[target_item]
-    distractor_pitch = pitch_dict[distractor_pitch_cat]
 
-    target_pitch_idx = settings["frequencies"].index(target_pitch)
-    distractor_pitch_idx = settings["frequencies"].index(distractor_pitch)
+    # Determine stimuli depending on task_type
+    if task_type == "auditory":
+        stimuli_options = settings["frequencies"][:5] + settings["frequencies"][6:]
+    elif task_type == "visual":
+        stimuli_options = settings["hues"][:5] + settings["hues"][6:]
 
-    colour_dict = {
-        "low": random.choice(settings["stimuli_colours"][:5]),
-        "high": random.choice(settings["stimuli_colours"][5:]),
-    }
+    # Generate random pitch OR colour for both target and distractor (cannot be the same!)
+    target_idx = random.randrange(len(stimuli_options))
+    distractor_idx = random.randrange(len(stimuli_options) - 1)
 
-    target_colour = colour_dict[target_colour_cat]
-    distractor_colour_cat = {"high": "low", "low": "high"}[target_colour_cat]
-    distractor_colour = colour_dict[distractor_colour_cat]
+    if distractor_idx >= target_idx:
+        distractor_idx += 1
 
-    target_colour_idx = settings["stimuli_colours"].index(target_colour)
-    distractor_colour_idx = settings["stimuli_colours"].index(distractor_colour)
-
-    if target_position == "left":
-        order = [target_item, distractor_item]
-        pitches_positions = [target_pitch_cat, distractor_pitch_cat]
-    else:
-        order = [distractor_item, target_item]
-        pitches_positions = [distractor_pitch_cat, target_pitch_cat]
+    target_value = stimuli_options[target_idx]
+    distractor_value = stimuli_options[distractor_idx]
 
     if target_item == 1:
         positions = [target_position, distractor_position]
-        colours = [target_colour, distractor_colour]
-        pitches_order_cat = [target_pitch_cat, distractor_pitch_cat]
-        pitches_order = [target_pitch, distractor_pitch]
-        pitch_idx_positions = [target_pitch_idx, distractor_pitch_idx]
-
+        values_order = [target_value, distractor_value]
+        values_idx_order = [target_idx, distractor_idx]
     else:
         positions = [distractor_position, target_position]
-        colours = [distractor_colour, target_colour]
-        pitches_order_cat = [distractor_pitch_cat, target_pitch_cat]
-        pitches_order = [distractor_pitch, target_pitch]
-        pitch_idx_positions = [distractor_pitch_idx, target_pitch_idx]
+        values_order = [distractor_value, target_value]
+        values_idx_order = [distractor_idx, target_idx]
+
+    if target_position == "left":
+        order = [target_item, distractor_item]
+        values_positions = [target_value, distractor_value]
+        values_idx_positions = [target_idx, distractor_idx]
+    else:
+        order = [distractor_item, target_item]
+        values_positions = [distractor_value, target_value]
+        values_idx_positions = [distractor_idx, target_idx]
 
     return {
         "ITI": random.randint(500, 800),
-        "target_item": target_item,
         "target_position": target_position,
-        "target_pitch": target_pitch,
-        "target_pitch_cat": target_pitch_cat,
-        "target_pitch_idx": target_pitch_idx,
-        "target_colour": target_colour,
-        "target_colour_cat": target_colour_cat,
-        "target_colour_idx": target_colour_idx,
-        "distractor_item": distractor_item,
+        "target_item": target_item,
+        "target_value": target_value,
+        "target_idx": target_idx,
         "distractor_position": distractor_position,
-        "distractor_pitch": distractor_pitch,
-        "distractor_pitch_cat": distractor_pitch_cat,
-        "distractor_pitch_idx": distractor_pitch_idx,
-        "distractor_colour": distractor_colour,
-        "distractor_colour_cat": distractor_colour_cat,
-        "distractor_colour_idx": distractor_colour_idx,
+        "distractor_item": distractor_item,
+        "distractor_value": distractor_value,
+        "distractor_idx": distractor_idx,
         "positions": positions,
+        "values_order": values_order,
+        "values_idx_order": values_idx_order,
         "order_LR": order,
-        "colours": colours,
-        "pitches_positions": pitches_positions,
-        "pitch_idx_positions": pitch_idx_positions,
-        "pitches_order_cat": pitches_order_cat,
-        "pitches_order": pitches_order,
+        "values_positions": values_positions,
+        "values_idx_positions": values_idx_positions,
     }
 
 
@@ -106,6 +86,7 @@ def do_while_showing(waiting_time, draw, window, on_flip=None):
     """
     Show whatever is drawn to the screen for exactly `waiting_time` period,
     while doing `something_to_do` in the mean time.
+    On initial screen flip, also execute a function (if passed).
     """
     window.flip()
     start = time()
@@ -117,29 +98,20 @@ def do_while_showing(waiting_time, draw, window, on_flip=None):
 
 def single_trial(
     ITI,
-    target_item,
     target_position,
-    target_pitch,
-    target_pitch_cat,
-    target_pitch_idx,
-    target_colour,
-    target_colour_cat,
-    target_colour_idx,
-    distractor_item,
+    target_item,
+    target_value,
+    target_idx,
     distractor_position,
-    distractor_pitch,
-    distractor_pitch_cat,
-    distractor_pitch_idx,
-    distractor_colour,
-    distractor_colour_cat,
-    distractor_colour_idx,
+    distractor_item,
+    distractor_value,
+    distractor_idx,
     positions,
+    values_order,
+    values_idx_order,
     order_LR,
-    colours,
-    pitches_positions,
-    pitch_idx_positions,
-    pitches_order_cat,
-    pitches_order,
+    values_positions,
+    values_idx_positions,
     stimuli,
     block_type,
     settings,
@@ -149,35 +121,34 @@ def single_trial(
     # Initial fixation cross to eliminate jitter caused by for loop
     draw_fixation_dot(stimuli["fixation_dot"])
 
+    def make_stimulus_screen(idx, duration, trigger_code):
+        if block_type == "auditory":
+            # Auditory block: Show fixation, play sound
+            draw_func = lambda: draw_fixation_dot(stimuli["fixation_dot"])
+            exec_func = lambda: stimuli["sounds"][
+                (values_order[idx], positions[idx])
+            ].play()
+
+        elif block_type == "visual":
+            # Visual block: Show visual objects, play no sound
+            draw_func = lambda: create_visual_stimulus_frame(
+                stimuli["visual_object"],
+                values_order[idx],
+                positions[idx],
+                stimuli["fixation_dot"],
+                settings,
+            )
+            exec_func = None
+
+        return (duration, draw_func, exec_func, trigger_code)
+
     # Screens contains per screen: (timing, function_to_draw(), function_to_execute(), triggercode)
     screens = [
         (0, lambda: 0 / 0, None, None),  # initial one to make life easier
         (ITI / 1000, lambda: draw_fixation_dot(stimuli["fixation_dot"]), None, None),
-        (
-            0.25,
-            lambda: create_stimulus_frame(
-                stimuli["visual_object"],
-                colours[0],
-                positions[0],
-                stimuli["fixation_dot"],
-                settings,
-            ),
-            lambda: stimuli["sounds"][(pitches_order[0], positions[0])].play(),
-            "stimulus_onset_1",
-        ),
+        make_stimulus_screen(0, 0.25, "stimulus_onset_1"),
         (0.75, lambda: draw_fixation_dot(stimuli["fixation_dot"]), None, None),
-        (
-            0.25,
-            lambda: create_stimulus_frame(
-                stimuli["visual_object"],
-                colours[1],
-                positions[1],
-                stimuli["fixation_dot"],
-                settings,
-            ),
-            lambda: stimuli["sounds"][(pitches_order[1], positions[1])].play(),
-            "stimulus_onset_2",
-        ),
+        make_stimulus_screen(1, 0.25, "stimulus_onset_2"),
         (0.75, lambda: draw_fixation_dot(stimuli["fixation_dot"]), None, None),
         (
             0.25,
@@ -192,7 +163,7 @@ def single_trial(
     for index, (duration, _, _, frame) in enumerate(screens[:-1]):
         # Send trigger if not testing
         if not testing and frame:
-            trigger = get_trigger(frame, target_pitch_cat, target_colour_cat, target_item, target_position)
+            trigger = get_trigger(frame, target_item, block_type, target_position)
             eyetracker.tracker.send_message(f"trig{trigger}")
 
         # Check for pressed 'q'
@@ -210,11 +181,10 @@ def single_trial(
 
     if block_type == "auditory":
         response = get_auditory_response(
-            target_pitch,
-            target_pitch_cat,
+            target_value,
             target_item,
             target_position,
-            target_colour_cat,
+            block_type,
             stimuli,
             settings,
             testing,
@@ -222,11 +192,10 @@ def single_trial(
         )
     elif block_type == "visual":
         response = get_visual_response(
-            target_colour,
-            target_colour_cat,
-            target_pitch_cat,
+            target_value,
             target_item,
             target_position,
+            block_type,
             stimuli,
             settings,
             testing,
@@ -241,7 +210,7 @@ def single_trial(
 
     if not testing:
         trigger = get_trigger(
-            "feedback_onset", target_pitch_cat, target_colour_cat, target_item, target_position
+            "feedback_onset", target_item, block_type, target_position
         )
         eyetracker.tracker.send_message(f"trig{trigger}")
 
@@ -250,7 +219,7 @@ def single_trial(
 
     return {
         "condition_code": get_trigger(
-            "stimulus_onset_1", target_pitch_cat, target_colour_cat, target_item, target_position
+            "stimulus_onset_1", target_item, block_type, target_position
         ),
         **response,
     }
