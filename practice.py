@@ -8,33 +8,16 @@ made by Anna van Harmelen, 2025
 
 import random
 from trial import generate_trial_characteristics
-from stimuli import draw_fixation_dot, show_text, draw_visual_object
-from psychopy.core import wait
-from response import (
-    get_auditory_response,
-    get_visual_response,
-    check_quit,
-    wait_for_key,
-)
-from time import sleep
+from stimuli import show_text
+from response import wait_for_key
 from trial import single_trial
 from numpy import mean
+import traceback
 
 
-def practice(block_type, stimuli, eyetracker, settings):
-    # Practice relevant block type response
-    if block_type == "auditory":
-        practice_trials(stimuli, "auditory", eyetracker, settings)
-    elif block_type == "visual":
-        practice_trials(stimuli, "visual", eyetracker, settings)
-
-
-def practice_trials(stimuli, block_type, eyetracker, settings):
+def practice(stimuli, block_type, eyetracker, settings):
     # Practice full trials until participant chooses to stop
-    if block_type == "auditory":
-        block = "sounds"
-    elif block_type == "visual":
-        block = "colours"
+    block = {"auditory": "sounds", "visual": "colours"}[block_type]
 
     try:
         performance = []
@@ -58,13 +41,11 @@ def practice_trials(stimuli, block_type, eyetracker, settings):
         settings["keyboard"].clearEvents()
 
         while True:
-            target_pitch = random.choice(["low", "high"])
-            target_colour = random.choice(["low", "high"])
             target_position = random.choice(["left", "right"])
             target_item = random.choice([1, 2])
 
             trial_characteristics = generate_trial_characteristics(
-                (target_pitch, target_colour, target_position, target_item), settings
+                (target_position, target_item), block_type, settings
             )
 
             # Generate trial
@@ -82,6 +63,7 @@ def practice_trials(stimuli, block_type, eyetracker, settings):
 
     except KeyboardInterrupt:
         settings["window"].flip()
+
         if len(performance) > 0:
             avg_score = round(mean(performance), 1)
             show_text(
@@ -91,7 +73,7 @@ def practice_trials(stimuli, block_type, eyetracker, settings):
             )
         else:
             show_text(
-                f"You skipped practice 2.\n\nPress SPACE to start the experiment.",
+                f"You skipped the practice.\n\nPress SPACE to start the experiment.",
                 settings["window"],
             )
 

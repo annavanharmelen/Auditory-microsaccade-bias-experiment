@@ -88,7 +88,7 @@ def main():
     stimuli = initialise_all_stimuli(settings)
 
     # Practice until participant wants to stop
-    # practice(current_block_type, stimuli, None if testing else eyelinker, settings)
+    practice(stimuli, current_block_type, None if testing else eyelinker, settings)
 
     # Initialise some stuff
     start_of_experiment = time()
