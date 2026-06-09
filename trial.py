@@ -206,7 +206,7 @@ def single_trial(
     create_feedback_frame(response["performance"], stimuli["fixation_dot"], settings)
 
     if response["premature_pressed"] == True:
-        show_text("!", settings["window"], (0, -settings["deg2pix"](0.3)))
+        show_text("!", settings["window"], (0, -settings["deg2pix"](0.35)))
 
     if not testing:
         trigger = get_trigger(

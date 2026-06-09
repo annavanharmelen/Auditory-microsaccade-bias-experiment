@@ -9,7 +9,7 @@ made by Anna van Harmelen, 2025
 from psychopy import visual, sound, core
 import numpy as np
 
-DOT_SIZE = 0.1  # radius of circle
+DOT_SIZE = 0.15  # radius of circle
 OBJECT_SIZE = 0.5  # radius of circle
 ECCENTRICITY = 7.5
 ITEM_SIZE = 1
@@ -102,6 +102,7 @@ def initialise_all_stimuli(settings):
         win=settings["window"],
         units="pix",
         radius=settings["deg2pix"](DOT_SIZE),
+        edges=20,
         pos=(0, 0),
         fillColor="#eaeaea",
     )
@@ -171,5 +172,5 @@ def create_feedback_frame(main_feedback, fixation_dot, settings):
     show_text(
         f"{main_feedback}",
         settings["window"],
-        (0, settings["deg2pix"](0.3)),
+        (0, settings["deg2pix"](0.35)),
     )
